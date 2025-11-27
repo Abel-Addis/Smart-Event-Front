@@ -42,7 +42,7 @@ const publish = async () => {
         class="px-16 py-6 bg-green-600 hover:bg-green-700 text-white text-3xl font-bold rounded-2xl shadow-lg transform hover:scale-105 transition">
         {{ publishing ? 'Publishing...' : '🚀 PUBLISH EVENT NOW' }}
       </button>
-      <p class="mt-6 text-gray-600 text-lg">You will not be able to change ticket types or pricing rules after publishing.</p>
+      <p class="mt-6 text-gray-600 text-lg">Be sure about everything.</p>
     </div>
   </div>
 </template>

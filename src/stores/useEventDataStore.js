@@ -1,16 +1,9 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { ref } from 'vue'
+import {api} from '../api/config'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:7119/api',
-})
 
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
 
 export const useEventDataStore = defineStore('eventData', () => {
   const categories = ref([])
