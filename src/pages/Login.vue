@@ -11,7 +11,7 @@ const router = useRouter()
 
 const validationSchema = yup.object({
     email: yup.string().email('Invalid Email').required('Email is required'),
-    password: yup.string().min(6, 'password must be at least 6 characters').required('password is required')
+    password: yup.string().min(1, 'password must be at least 6 characters').required('password is required')
 })
 
 const { handleSubmit, errors, submitCount } = useForm({ validationSchema })
@@ -37,7 +37,6 @@ const onSubmit = handleSubmit(async (values) => {
 
             <form @submit.prevent="onSubmit" class="space-y-5">
 
-                <!-- Email -->
                 <div>
                     <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
                         Email
@@ -50,7 +49,7 @@ const onSubmit = handleSubmit(async (values) => {
                     </p>
                 </div>
 
-                <!-- Password -->
+             
                 <div>
                     <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
                         Password
@@ -63,7 +62,7 @@ const onSubmit = handleSubmit(async (values) => {
                     </p>
                 </div>
 
-                <!-- Submit -->
+       
                 <button type="submit" class="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 
                  text-white font-semibold shadow-sm transition disabled:opacity-50" :disabled="loginPending">
                     <span v-if="loginPending">Logging in...</span>

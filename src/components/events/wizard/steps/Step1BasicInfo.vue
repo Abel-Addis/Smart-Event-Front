@@ -16,12 +16,13 @@ const loading = ref(false)
 const bannerPreview = ref(null)
 const galleryPreviews = ref([])
 
-// THIS IS THE ONLY SCHEMA THAT WORKS FLAWLESSLY WITH datetime-local
+
 const schema = yup.object({
     title: yup.string().required('Event title is required').min(5).max(150),
     description: yup.string().required('Description is required').min(2),
     categoryId: yup.string().required('Please select a category'),
     location: yup.string().required('Location is required').min(5),
+    totalCapacity: yup.number().required("total capacity is required").min(1, "ለዚ ነው ኢቨንት የምታዘጋጀው አንት ቋጣሪ"),
     startDate: yup
         .string()
         .required('Start date & time is required')
@@ -36,19 +37,19 @@ const schema = yup.object({
             if (!value) return false;
             return !isNaN(new Date(value).getTime());
         })
-        .test('is-after-start', 'End date must be after start date', function(value) {
+        .test('is-after-start', 'End date must be after start date', function (value) {
             const startDate = new Date(this.parent.startDate);
             const endDate = new Date(value);
             return endDate > startDate;
         }),
     coverImage: yup.mixed().test('file-required', 'Banner image is required', value => {
-        return store.basicInfo.bannerImage !== null
+        return store.basicInfo.coverImage !== null
     }),
 })
 const onSubmit = async (values) => {
     loading.value = true
 
-    
+
     try {
         const fd = new FormData()
 
@@ -56,22 +57,23 @@ const onSubmit = async (values) => {
         fd.append('description', values.description)
         fd.append('categoryId', values.categoryId.toString())
         fd.append('location', values.location)
-
-        // datetime-local returns string like "2025-12-25T14:30" → convert safely
+        fd.append("totalCapacity", values.totalCapacity)
         fd.append('startDate', new Date(values.startDate).toISOString())
         fd.append('endDate', new Date(values.endDate).toISOString())
 
-        // Backend expects "CoverImage" with capital C and I
-        if (store.basicInfo.bannerImage) {
-            fd.append('CoverImage', store.basicInfo.bannerImage)
+
+        if (store.basicInfo.coverImage) {
+            fd.append('coverImage', store.basicInfo.coverImage)
         }
 
-        store.basicInfo.galleryImages.forEach(file => {
-            fd.append('galleryImages', file)
+        store.basicInfo.additionalImages.forEach(file => {
+            fd.append('additionalImages', file)
         })
-
+        console.log("fd", fd);
         const res = await api.createDraftEvent(fd)
-        store.eventId = res.id || res.eventId || res.data?.id
+        console.log("res", res);
+
+        store.eventId = res.eventId || res.data?.eventId
 
         emit('next')
     } catch (err) {
@@ -85,21 +87,22 @@ const onSubmit = async (values) => {
 const handleBanner = (e) => {
     const file = e.target.files[0]
     if (file) {
-        store.basicInfo.bannerImage = file
+        store.basicInfo.coverImage = file
         bannerPreview.value = URL.createObjectURL(file)
     }
 }
 
 const handleGallery = (e) => {
     const files = Array.from(e.target.files)
-    store.basicInfo.galleryImages.push(...files)
+    store.basicInfo.additionalImages.push(...files)
     galleryPreviews.value.push(...files.map(f => URL.createObjectURL(f)))
+    console.log("additional image", store.basicInfo.additionalImages);
+
 }
 </script>
 
 <template>
     <Form :validation-schema="schema" @submit="onSubmit" class="space-y-8">
-        <!-- Title -->
         <div>
             <label class="block text-lg font-medium mb-2">Event Title *</label>
             <Field name="title" v-model="store.basicInfo.title"
@@ -108,7 +111,6 @@ const handleGallery = (e) => {
             <ErrorMessage name="title" class="text-red-600 text-sm mt-1" />
         </div>
 
-        <!-- Category -->
         <div>
             <label class="block text-lg font-medium mb-2">Category *</label>
             <Field as="select" name="categoryId" v-model="store.basicInfo.categoryId"
@@ -121,15 +123,19 @@ const handleGallery = (e) => {
             <ErrorMessage name="categoryId" class="text-red-600 text-sm mt-1" />
         </div>
 
-        <!-- Location -->
         <div>
             <label class="block text-lg font-medium mb-2">Location / Venue *</label>
             <Field name="location" v-model="store.basicInfo.location"
                 class="w-full px-5 py-4 border border-gray-300 rounded-xl" placeholder="e.g. Addis Ababa Stadium" />
             <ErrorMessage name="location" class="text-red-600 text-sm mt-1" />
         </div>
+        <div>
+            <label class="block text-lg font-medium mb-2">Total capacity</label>
+            <Field name="totalCapacity" v-model="store.basicInfo.totalCapacity"
+                class="w-full px-5 py-4 border border-gray-300 rounded-xl" placeholder="enter total capacity" />
+            <ErrorMessage name="totalCapacity" class="text-red-600 text-sm mt-1" />
+        </div>
 
-        <!-- Dates -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-lg font-medium mb-2">Start Date & Time *</label>
@@ -146,7 +152,6 @@ const handleGallery = (e) => {
         </div>
 
 
-        <!-- Description -->
         <div>
             <label class="block text-lg font-medium mb-2">Event Description *</label>
             <Field as="textarea" name="description" v-model="store.basicInfo.description" rows="6"
@@ -155,18 +160,16 @@ const handleGallery = (e) => {
             <ErrorMessage name="description" class="text-red-600 text-sm mt-1" />
         </div>
 
-        <!-- REQUIRED Banner Image -->
         <div>
             <label class="block text-lg font-medium mb-2">Banner / Cover Image * (required)</label>
             <input type="file" accept="image/*" @change="handleBanner"
                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" />
-            <Field name="coverImage" v-model="store.basicInfo.bannerImage" class="hidden" />
+            <Field name="coverImage" v-model="store.basicInfo.coverImage" class="hidden" />
             <ErrorMessage name="coverImage" class="text-red-600 text-sm mt-1" />
             <img v-if="bannerPreview" :src="bannerPreview" class="mt-4 max-h-64 rounded-xl object-cover w-full"
                 alt="Banner preview" />
         </div>
 
-        <!-- Optional Gallery -->
         <div>
             <label class="block text-lg font-medium mb-2">Gallery Images (optional)</label>
             <input type="file" multiple accept="image/*" @change="handleGallery"
@@ -177,7 +180,6 @@ const handleGallery = (e) => {
             </div>
         </div>
 
-        <!-- Submit -->
         <div class="flex justify-end mt-12">
             <button type="submit" :disabled="loading"
                 class="px-12 py-5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xl font-bold rounded-xl transition shadow-lg">

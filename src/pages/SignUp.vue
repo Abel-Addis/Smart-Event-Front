@@ -41,7 +41,6 @@ const onsubmit = handleSubmit(async (values) => {
 
       <form @submit.prevent="onsubmit" class="space-y-5">
 
-        <!-- Full Name -->
         <div>
           <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
             Full Name
@@ -58,7 +57,6 @@ const onsubmit = handleSubmit(async (values) => {
           </p>
         </div>
 
-        <!-- Email -->
         <div>
           <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
             Email
@@ -75,7 +73,6 @@ const onsubmit = handleSubmit(async (values) => {
           </p>
         </div>
 
-        <!-- Phone -->
         <div>
           <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
             Phone Number
@@ -92,7 +89,6 @@ const onsubmit = handleSubmit(async (values) => {
           </p>
         </div>
 
-        <!-- Password -->
         <div>
           <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
             Password
@@ -109,7 +105,6 @@ const onsubmit = handleSubmit(async (values) => {
           </p>
         </div>
 
-        <!-- Confirm Password -->
         <div>
           <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">
             Confirm Password
@@ -126,7 +121,6 @@ const onsubmit = handleSubmit(async (values) => {
           </p>
         </div>
 
-        <!-- Submit -->
         <button 
           type="submit"
           class="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 

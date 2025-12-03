@@ -11,11 +11,12 @@ export const useEventWizardStore = defineStore('eventWizard', () => {
     location: '',
     startDate: '',
     endDate: '',
-    bannerImage: null,
-    galleryImages: []
+    totalCapacity:1,
+    coverImage: null,
+    additionalImages: []
   })
 
-  const ticketTypes = ref([]) // { id, name, description, basePrice, quantity, pricingRules: [] }
+  const ticketTypes = ref([]) 
 
   const reset = () => {
     eventId.value = null
@@ -26,8 +27,9 @@ export const useEventWizardStore = defineStore('eventWizard', () => {
       location: '',
       startDate: '',
       endDate: '',
-      bannerImage: null,
-      galleryImages: []
+      totalCapacity:1,
+      coverImage: null,
+      additionalImages: []
     }
     ticketTypes.value = []
   }

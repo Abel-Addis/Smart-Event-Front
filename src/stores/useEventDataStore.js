@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { ref } from 'vue'
-import {api} from '../api/config'
+import api from '../api/config'
 
 
 
@@ -20,12 +19,12 @@ export const useEventDataStore = defineStore('eventData', () => {
         api.get('/events/get-default-ticket-types'),
         api.get('/events/get-default-pricing-rules')
       ])
-      console.log('rule',rule.data);
+      // console.log('rule',rule.data);
       
       categories.value = cat.data
       defaultTicketTypes.value = ticket.data
       defaultPricingRules.value = rule.data
-      console.log('pricing rule',defaultPricingRules.value);
+      // console.log('pricing rule',defaultPricingRules.value);
       
     } catch (e) {
       console.error(e)
