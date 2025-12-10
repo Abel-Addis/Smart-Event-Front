@@ -13,6 +13,11 @@ const routes = [
     component: () => import("../views/events/EventBrowsingView.vue"),
   },
   {
+    path: "/forgot-password",
+    name: "ForgotPassword",
+    component: () => import("../views/auth/ForgotPasswordView.vue"),
+  },
+  {
     path: "/events/:eventId",
     component: () => import("../views/events/EventDetailView.vue"),
   },
@@ -20,6 +25,11 @@ const routes = [
     path: "/admin",
     component: () => import("../views/Admin/Admindashboard.vue"),
     children: [
+      {
+        path: "",
+        name: "AdminOverview",
+        component: () => import("../views/Admin/AdminOverview.vue"),
+      },
       {
         path: "pending",
         component: () => import("../views/Admin/Organizerspending.vue"),

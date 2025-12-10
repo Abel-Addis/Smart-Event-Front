@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import {api} from '../api/config'
+import api from '../api/config'
 
 
 export const useAdminStore = defineStore('admin', {

@@ -5,6 +5,8 @@ import * as yup from 'yup'
 import { useEventWizardStore } from '../../../../stores/useEventWizardStore'
 import { useEventDataStore } from '../../../../stores/useEventDataStore'
 import { useEventCreationApi } from '../../../../composables/useEventCreationApi'
+import BaseInput from '../../../BaseInput.vue'
+import BaseButton from '../../../BaseButton.vue'
 
 const emit = defineEmits(['next'])
 
@@ -16,7 +18,6 @@ const loading = ref(false)
 const selectedTicketTypeId = ref(null)
 const selectedRuleId = ref(null)
 
-// Safe rule name
 const currentRuleName = computed(() => {
   if (!selectedRuleId.value) return ''
   const rule = dataStore.defaultPricingRules.find(r => r.id === selectedRuleId.value)
@@ -38,27 +39,13 @@ const ruleSchema = yup.object({
     is: () => currentRuleName.value.includes('earlybird'),
     then: (schema) => schema.required('Start days is required').min(1),
     otherwise: (schema) => schema.nullable()
-  })
-  // .test('is-valid-date', 'Please select a valid start date', value => {
-  //           if (!value) return false;
-  //           return !isNaN(new Date(value).getTime());
-  //       })
-        ,
+  }),
   earlyBirdEndDays: yup.string().when([], {
     is: () => currentRuleName.value.includes('earlybird'),
     then: (schema) => schema.required('End days is required').min(1),
     otherwise: (schema) => schema.nullable()
-  })
-  // .test('is-valid-date', 'Please select a valid end date', value => {
-  //   if (!value) return false;
-  //   return !isNaN(new Date(value).getTime());
-  // })
-  //   .test('is-after-start', 'End date must be after start date', function (value) {
-  //     const startDate = new Date(this.parent.startDate);
-  //     const endDate = new Date(value);
-  //     return endDate > startDate;
-  //   }),
-  ,demandThresholdPercentage: yup.number().when([], {
+  }),
+  demandThresholdPercentage: yup.number().when([], {
     is: () => currentRuleName.value.includes('demandbased'),
     then: (schema) => schema.required('Threshold % is required').min(1).max(99),
     otherwise: (schema) => schema.nullable()
@@ -73,7 +60,6 @@ const ruleSchema = yup.object({
 const onSubmit = async (values) => {
   loading.value = true
   try {
-    // const payload = { pricingRuleId: selectedRuleId.value }
     const payload = { ruleType: currentRuleName.value }
 
     if (currentRuleName.value.includes('lastminute')) {
@@ -87,11 +73,6 @@ const onSubmit = async (values) => {
       payload.thresholdPercentage = values.demandThresholdPercentage
       payload.priceIncreasePercent = values.priceIncreasePercentage
     }
-    console.log('date time',values.earlyBirdStartDays);
-    
-    // console.log(payload);
-    console.log('Payload', payload);
-    console.log('values', values)
 
     await api.addPricingRule(selectedTicketTypeId.value, payload)
 
@@ -108,36 +89,43 @@ const onSubmit = async (values) => {
     loading.value = false
   }
 }
-
-
 </script>
 
 <template>
-  <div class="space-y-10">
+  <div class="space-y-8">
     <!-- Current Rules -->
     <div>
-      <h3 class="text-2xl font-bold mb-6">Current Pricing Rules</h3>
-      <div v-for="tt in store.ticketTypes" :key="tt.id" class="bg-purple-50 p-6 rounded-xl mb-6">
-        <p class="font-bold text-lg mb-3">{{ tt.name }}</p>
-        <div class="flex flex-wrap gap-3">
-          <span v-for="r in tt.pricingRules" :key="r.name"
-            class="px-4 py-2 bg-purple-600 text-white rounded-full text-sm">
-            {{ r.name }}
-          </span>
-          <span v-if="tt.pricingRules.length === 0" class="text-gray-400 italic">No pricing rules yet</span>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Current Pricing Rules</h3>
+      <div v-if="store.ticketTypes.every(tt => tt.pricingRules.length === 0)"
+        class="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+        <p class="text-gray-500 dark:text-gray-400">No pricing rules configured</p>
+      </div>
+      <div v-else class="grid gap-4">
+        <div v-for="tt in store.ticketTypes" :key="tt.id"
+          class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <p class="font-bold text-lg text-gray-900 dark:text-white mb-3">{{ tt.name }}</p>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="r in tt.pricingRules" :key="r.name"
+              class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium border border-indigo-200 dark:border-indigo-800">
+              {{ r.name }}
+            </span>
+            <span v-if="tt.pricingRules.length === 0" class="text-gray-400 text-sm italic">No rules applied</span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Add New Rule -->
-    <div class="border-t pt-8">
-      <h3 class="text-2xl font-bold mb-8">Add Pricing Rule (Optional)</h3>
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-8">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Add Pricing Rule (Optional)</h3>
 
       <Form :validation-schema="ruleSchema" @submit="onSubmit" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block font-medium mb-2">Apply to Ticket Type</label>
-            <select v-model="selectedTicketTypeId" class="w-full px-5 py-4 border rounded-xl">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Apply to Ticket
+              Type</label>
+            <select v-model="selectedTicketTypeId"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ease-in-out shadow-sm">
               <option :value="null" disabled>Select ticket type</option>
               <option v-for="tt in store.ticketTypes" :key="tt.id" :value="tt.id">
                 {{ tt.name }}
@@ -146,78 +134,53 @@ const onSubmit = async (values) => {
           </div>
 
           <div>
-            <label class="block font-medium mb-2">Choose Pricing Rule</label>
-            <select v-model="selectedRuleId" class="w-full px-5 py-4 border rounded-xl">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Choose Pricing Rule</label>
+            <select v-model="selectedRuleId"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ease-in-out shadow-sm">
               <option :value="null" disabled>Select rule</option>
               <option v-for="(rule, idx) in dataStore.defaultPricingRules" :key="idx" :value="rule.id">
                 {{ rule.ruleType }}
               </option>
             </select>
-            <p v-if="dataStore.defaultPricingRules.length === 0" class="text-amber-600 text-sm mt-2">
-              No pricing rules available (contact admin)
-            </p>
           </div>
         </div>
 
         <!-- Conditional Fields -->
-        <div v-if="selectedRuleId && currentRuleName" class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <template v-if="currentRuleName.includes('lastminute')">
-            <div>
-              <Field name="discountPercentage" type="number" placeholder="Discount %"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="discountPercentage" class="text-red-600 text-sm" />
-            </div>
-            <div>
-              <Field name="lastNDaysBeforeEvent" type="number" placeholder="Last N days"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="lastNDaysBeforeEvent" class="text-red-600 text-sm" />
-            </div>
-          </template>
+        <div v-if="selectedRuleId && currentRuleName"
+          class="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <template v-if="currentRuleName.includes('lastminute')">
+              <BaseInput name="discountPercentage" label="Discount Percentage" type="number" placeholder="e.g. 20" />
+              <BaseInput name="lastNDaysBeforeEvent" label="Days Before Event" type="number" placeholder="e.g. 3" />
+            </template>
 
-          <template v-else-if="currentRuleName.includes('earlybird')">
-            <div>
-              <Field name="discountPercentage" type="number" placeholder="Discount %"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="discountPercentage" class="text-red-600 text-sm" />
-            </div>
-            <div>
-              <Field name="earlyBirdStartDays" type="datetime-local" number placeholder="Start days before"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="earlyBirdStartDays" class="text-red-600 text-sm" />
-            </div>
-            <div>
-              <Field name="earlyBirdEndDays" type="datetime-local" placeholder="End days before"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="earlyBirdEndDays" class="text-red-600 text-sm" />
-            </div>
-          </template>
+            <template v-else-if="currentRuleName.includes('earlybird')">
+              <BaseInput name="discountPercentage" label="Discount Percentage" type="number" placeholder="e.g. 15" />
+              <BaseInput name="earlyBirdStartDays" label="Start Date" type="datetime-local" />
+              <BaseInput name="earlyBirdEndDays" label="End Date" type="datetime-local" />
+            </template>
 
-          <template v-else-if="currentRuleName.includes('demandbased')">
-            <div>
-              <Field name="demandThresholdPercentage" type="number" placeholder="Threshold %"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="demandThresholdPercentage" class="text-red-600 text-sm" />
-            </div>
-            <div>
-              <Field name="priceIncreasePercentage" type="number" placeholder="Increase %"
-                class="w-full px-5 py-4 border rounded-xl" />
-              <ErrorMessage name="priceIncreasePercentage" class="text-red-600 text-sm" />
-            </div>
-          </template>
+            <template v-else-if="currentRuleName.includes('demandbased')">
+              <BaseInput name="demandThresholdPercentage" label="Demand Threshold %" type="number"
+                placeholder="e.g. 80" />
+              <BaseInput name="priceIncreasePercentage" label="Price Increase %" type="number" placeholder="e.g. 10" />
+            </template>
+          </div>
+
+          <div class="mt-6">
+            <BaseButton type="submit" variant="secondary" :loading="loading"
+              :disabled="!selectedTicketTypeId || !selectedRuleId">
+              + Add Pricing Rule
+            </BaseButton>
+          </div>
         </div>
-
-        <button type="submit" :disabled="loading || !selectedTicketTypeId || !selectedRuleId"
-          class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl">
-          {{ loading ? 'Adding...' : '+ Add Pricing Rule' }}
-        </button>
       </Form>
     </div>
 
-    <div class="flex justify-end mt-12">
-      <button @click="emit('next')"
-        class="px-12 py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-xl">
-        Continue to Review & Publish →
-      </button>
+    <div class="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+      <BaseButton @click="emit('next')" variant="primary" size="lg">
+        Continue to Review & Publish
+      </BaseButton>
     </div>
   </div>
 </template>

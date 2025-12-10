@@ -15,8 +15,6 @@ export const useEventBrowsingStore = defineStore('eventBrowsing', () => {
       const { data } = await api.get('/EventBrowsing/activeEvents')
       activeEvents.value = data
       console.log("data",activeEvents.value);
-      
-
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to load active events'
     } finally {
